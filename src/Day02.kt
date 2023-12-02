@@ -1,8 +1,14 @@
+import kotlin.math.max
+
 fun main() {
 
     val NUM_RED = 12
     val NUM_GREEN = 13
     val NUM_BLUE = 14
+
+    val RED = "red"
+    val GREEN = "green"
+    val BLUE = "blue"
 
 
     fun isSegmentValid(segment: String, red: Int, green: Int, blue: Int): Boolean {
@@ -11,15 +17,15 @@ fun main() {
             { it.substringBefore(' ').toInt() }
         )
 
-        if ((cubes["red"] ?: 0) > red) {
+        if ((cubes[RED] ?: 0) > red) {
             return false
         }
 
-        if ((cubes["blue"] ?: 0) > blue) {
+        if ((cubes[BLUE] ?: 0) > blue) {
             return false
         }
 
-        if ((cubes["green"] ?: 0) > green) {
+        if ((cubes[GREEN] ?: 0) > green) {
             return false
         }
 
@@ -31,6 +37,20 @@ fun main() {
         val segments = game.substringAfter(':').split(';').map{it.trim()}
 
         return if (segments.all { isSegmentValid(it, NUM_RED, NUM_GREEN, NUM_BLUE) }) gameId else 0
+    }
+
+    fun findMinimums(game: String): Int {
+        val segments = game.substringAfter(':').split(';', ',').map{it.trim()}
+        val colours = mutableMapOf(RED to 0, GREEN to 0, BLUE to 0)
+
+        segments.forEach{
+            val count = it.substringBefore(' ').toInt()!!
+            val colour = it.substringAfter(' ')
+
+            colours[colour] = max(colours[colour]!!, count)
+        }
+
+        return colours[RED]!! * colours[GREEN]!! * colours[BLUE]!!
     }
 
 
@@ -57,7 +77,7 @@ fun main() {
      * Return their product.
      */
     fun part2(input: List<String>): Int {
-        return 0
+        return input.map{findMinimums(it)}.sum()
     }
 
     val input = readInput("Day02")
