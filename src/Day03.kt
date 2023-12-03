@@ -81,20 +81,96 @@ fun main() {
         return result
     }
 
+    fun getNumberAt(input: List<String>, i: Int, j: Int): Int {
+        var start = j
+        var end = j
+
+        var k = j
+        while (k >= 0 && input[i][k].isDigit()) {
+            start = k--
+        }
+
+        k = j
+        while (k < input[0].length && input[i][k].isDigit()) {
+            end = k++
+        }
+
+        return input[i].substring(start, end+1).toInt()
+    }
+
+    fun validateCandidate(candidate: Pair<Int, Int>, input: List<String>): Int {
+        val numbers: ArrayList<Int> = arrayListOf()
+        val (i, j)  = candidate
+
+        // Check the sides
+        if (j > 0 && input[i][j-1].isDigit()) {
+            numbers.add(getNumberAt(input, i, j-1))
+        }
+
+        if (j < input[0].length - 1 && input[i][j+1].isDigit()) {
+            numbers.add(getNumberAt(input, i, j+1))
+        }
+
+        // Check Above
+        if (i > 0) {
+            if (input[i-1][j].isDigit()) {
+                numbers.add(getNumberAt(input, i-1, j))
+            } else {
+                if (j > 0 && input[i-1][j-1].isDigit()) {
+                    numbers.add(getNumberAt(input, i-1, j-1))
+                }
+
+                if (j < input[0].length - 1 && input[i-1][j+1].isDigit()) {
+                    numbers.add(getNumberAt(input, i-1, j+1))
+                }
+            }
+        }
+
+        // Check below
+        if (i < input.size - 1) {
+            if (input[i+1][j].isDigit()) {
+                numbers.add(getNumberAt(input, i+1, j))
+            } else {
+                if (j > 0 && input[i+1][j-1].isDigit()) {
+                    numbers.add(getNumberAt(input, i+1, j-1))
+                }
+
+                if (j < input[0].length - 1 && input[i+1][j+1].isDigit()) {
+                    numbers.add(getNumberAt(input, i+1, j+1))
+                }
+            }
+        }
+
+        return if (numbers.size == 2) numbers[0] * numbers[1] else 0
+    }
+
 
     /**
-     * TODO
+     * A gear is any '*' that is adjacent to exactly two part numbers.
+     * Its gear ratio is the reuslt of multiplying those two numbers together.
+     *
+     * Find the gear ratio of every gear and add them up.
      */
     fun part2(input: List<String>): Int {
-        return 0
+        // Find all the stars
+        val candidates = mutableSetOf<Pair<Int, Int>>()
+        for ((i, line) in input.withIndex()) {
+            for ((j, c) in line.withIndex()) {
+                if (c == '*') {
+                    candidates.add(Pair(i, j))
+                }
+            }
+        }
+
+        return candidates.sumOf { validateCandidate(it, input) }
     }
 
     val input = readInput("Day03")
-    val testInputPart1 = readInput("Day03_test")
+    val testInput = readInput("Day03_test")
 
-    check(part1(testInputPart1) == 4362)
+    check(part1(testInput) == 4362)
     part1(input).println()
 
-//    check(part2(testInputPart1) == 0)
-//    part2(input).println()
+    check(part2(testInput) == 467835)
+    part2(input).println()
 }
