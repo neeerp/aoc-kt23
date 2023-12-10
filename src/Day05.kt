@@ -27,9 +27,22 @@ fun main() {
 
 
     /**
+     * About those seeds... those are actually ranges of the form (start, length) :)
+     *
+     * Instead of being smart about this, I brute forced it with some parallelism and a little
+     * bit more care for our memory use so we don't OOM on my lowly 64GB of RAM.
+     *
+     * I'm sure a smarter solution that doesn't take 2 minutes to run exists, but at least I got
+     * an excuse to try some parallelism in Kotlin :D
      */
     fun part2(input: String): Long {
-        return 0
+        val inputSegments = input.split("\n\n")
+        val seeds = inputSegments[0].substringAfter("seeds:").trim().split(' ').map { it.toLong() }.chunked(2)
+
+        val maps = inputSegments.drop(1).map { AdventMap(it) }
+        return seeds.parallelStream().map { seedPair ->
+            (seedPair[0]..<(seedPair[0] + seedPair[1])).minOf { chainMap(it, maps) }
+        }.toList().min()
     }
 
     val input = readRaw("Day05")
@@ -38,8 +51,8 @@ fun main() {
     check(part1(testInput) == 35L)
     part1(input).println()
 
-//    check(part2(testInput) == 30)
-//    part2(input).println()
+    check(part2(testInput) == 46L)
+    part2(input).println()
 }
 
 class AdventMap(input: String) {
@@ -53,7 +66,6 @@ class AdventMap(input: String) {
             it.map(value)
         } ?: value
     }
-
 }
 
 class AdventMapping(private val dst: Long, private val src: Long, private val len: Long) {
