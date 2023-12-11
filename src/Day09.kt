@@ -24,6 +24,16 @@ fun main() {
         return final.last()
     }
 
+    fun extrapolateBackwards(diffs: List<List<Int>>): Int {
+        val final = mutableListOf(0)
+
+        for (list in diffs.asReversed().drop(1)) {
+            final.add(list.first() - final.last())
+        }
+
+        return final.last()
+    }
+
     fun part1(input: List<String>): Int {
         return input.sumOf {
             val diffs = computeDifferences(it.split(' ').map { it.toInt() })
@@ -33,7 +43,10 @@ fun main() {
 
 
     fun part2(input: List<String>): Int {
-        return 0
+        return input.sumOf {
+            val diffs = computeDifferences(it.split(' ').map { it.toInt() })
+            extrapolateBackwards(diffs)
+        }
     }
 
     val testInput = readInput("Day09_test")
@@ -42,6 +55,6 @@ fun main() {
     check(part1(testInput) == 114)
     part1(input).println()
 
-//    check(part2(testInput) == 281)
-//    part2(input).println()
+    check(part2(testInput) == 2)
+    part2(input).println()
 }
