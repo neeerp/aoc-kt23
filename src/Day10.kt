@@ -30,13 +30,36 @@ fun main() {
 
 
     /**
-     * What's the fewest number of cubes that could have been in the bag for each game?
-     *
-     * Return their product.
      */
     fun part2(input: List<String>): Int {
+        val grid = Grid(input.map { it.toList() }, TileFactory())
+        val start = grid.findStart()
 
-        return 0
+
+        var cur = start.connections().first()
+        var prev = start
+
+        val path = mutableListOf(start, cur)
+        while (!cur.equals(start)) {
+            val temp = cur.next(prev)!!
+            prev = cur
+            cur = temp
+            path.add(cur)
+        }
+
+        // Shoelace Formula: A = 1/2 (sum{(y_i + y_{i+1})(x_i - x_{i+1})})
+        var A = 0
+        for (i in 0..<path.size) {
+            if (i == path.size - 1) {
+                A += (path[i].i - path[0].i) * (path[i].j + path[0].j)
+            } else {
+                A += (path[i].i - path[i + 1].i) * (path[i].j + path[i + 1].j)
+            }
+        }
+        A /= 2
+
+        // Pick's theorem: A = interiorPoints + (boundaryPoints/2) - 1
+        return A - (path.size / 2) + 1
     }
 
     val input = readInput("Day10")
@@ -54,7 +77,7 @@ fun main() {
     part1(input).println()
 
 //    check(part2(testInputPart1) == 2286)
-//    part2(input).println()
+    part2(input).println()
 }
 
 class TileFactory {
@@ -80,8 +103,8 @@ data class Coord(val i: Int, val j: Int) {
 }
 
 abstract class Tile(private val coord: Coord, protected val grid: Grid) {
-    protected val i: Int = coord.i
-    protected val j: Int = coord.j
+    val i: Int = coord.i
+    val j: Int = coord.j
 
     abstract fun connections(): Collection<Tile>
 
