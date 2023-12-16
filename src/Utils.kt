@@ -25,3 +25,8 @@ fun Any?.println() = println(this)
 
 
 fun Collection<Int>.product(): Int = this.reduce { product: Int, element: Int -> product * element }
+
+fun <T>List<List<T>>.transpose(): List<List<T>> {
+    return (this[0].indices).map { i -> (this.indices).map { j -> this[j][i]} }
+}
+
