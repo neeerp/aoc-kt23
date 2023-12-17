@@ -3,10 +3,6 @@ private const val b = true
 fun main() {
 
     fun isSymmetric(lines: List<String>, lineOfSymmetry: Int): Boolean {
-        if (lineOfSymmetry == 0) {
-            return false
-        }
-
         var l = lineOfSymmetry - 1
         var r = lineOfSymmetry
 
@@ -21,15 +17,19 @@ fun main() {
         return true
     }
 
-    fun findSymmetry(lines: List<List<Char>>): Int {
+    fun findSymmetry(lines: List<List<Char>>, ignore: Int): Int {
         var lines = lines.map{ it.joinToString("") }
-        for (i in 0..<lines.size) {
-            if (isSymmetric(lines, i)) {
+        for (i in 1..<lines.size) {
+            if (isSymmetric(lines, i) && i != ignore) {
                 return i
             }
         }
 
         return 0
+    }
+
+    fun findSymmetry(lines: List<List<Char>>): Int {
+        return findSymmetry(lines, 0)
     }
 
     fun processMirror(mirrorText: String): Int {
@@ -41,13 +41,37 @@ fun main() {
 
     }
 
+    fun smudgeMirror(mirrorText: String): Int {
+        val horizontal = mirrorText.split("\n").map { it.toList() }
+        val vertical = horizontal.transpose()
+
+        val vline = findSymmetry(vertical)
+        val hline = findSymmetry(horizontal)
+
+        val result = mirrorText.indices.toList().parallelStream().map {
+            if (mirrorText[it] == '\n') {
+                0
+            } else {
+                val smudgedMirror = mirrorText.substring(0, it) +
+                        (if (mirrorText[it] == '#') '.' else '#') +
+                        mirrorText.substring(it + 1, mirrorText.length)
+
+                val h = smudgedMirror.split("\n").map { it.toList() }
+                val v = h.transpose()
+
+                findSymmetry(v, vline) + findSymmetry(h, hline) * 100
+            }
+        }.toList().distinct().sum()
+        return result
+    }
+
 
     fun part1(input: String): Int {
         return input.split("\n\n").map { processMirror(it) }.sum()
     }
 
     fun part2(input: String): Int {
-        return 0
+        return input.split("\n\n").map { smudgeMirror(it) }.sum()
     }
 
     val testInput = readRaw("Day13_test")
@@ -55,9 +79,9 @@ fun main() {
     val input = readRaw("Day13")
 
     check(part1(testInput) == 405)
-//    part1(playInput).println()
+    part2(playInput).println()
     part1(input).println()
 
-//    check(part2(testInput) == 2)
-//    part2(input).println()
+    check(part2(testInput) == 400)
+    part2(input).println()
 }
