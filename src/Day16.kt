@@ -84,11 +84,10 @@ fun main() {
             Pair(coords, BeamDirection.RIGHT) in energized
     }
 
-
-    fun part1(input: List<List<Char>>): Int {
-        val m = input.size
-        val n = input[0].size
-        val beams = mutableListOf(Pair(Pair(0,0), BeamDirection.RIGHT))
+    fun energize(grid: List<List<Char>>, start: Pair<Int, Int>, startDirection: BeamDirection): Int {
+        val m = grid.size
+        val n = grid[0].size
+        val beams = mutableListOf(Pair(start, startDirection))
 
         val energized = mutableSetOf<Pair<Pair<Int,Int>, BeamDirection>>()
 
@@ -98,7 +97,7 @@ fun main() {
             energized.add(cur)
 
             val (i, j) = coords
-            val tile = tileFrom(input[i][j])
+            val tile = tileFrom(grid[i][j])
 
             val dirs = newDirections(direction, tile)
             for (dir in dirs) {
@@ -110,27 +109,41 @@ fun main() {
 
                 beams.add(Pair(newCoords, dir))
             }
-
         }
 
         var count = 0
         for (i in 0..<m) {
             for (j in 0..<n) {
                 if (isEnergized(Pair(i,j), energized)) {
-                    print("#")
                     count += 1
-                } else {
-                    print(".")
                 }
             }
-            print("\n")
         }
 
         return count
     }
 
+
+    fun part1(input: List<List<Char>>): Int {
+        return energize(input, Pair(0,0), BeamDirection.RIGHT)
+    }
+
     fun part2(input: List<List<Char>>): Int {
-        return 0
+        val candidates = mutableListOf<Int>()
+        val m = input.size
+        val n = input[0].size
+
+        for (i in 0..<m) {
+            candidates.add(energize(input, Pair(i, 0), BeamDirection.RIGHT))
+            candidates.add(energize(input, Pair(i, n-1), BeamDirection.LEFT))
+        }
+
+        for (j in 0..<n) {
+            candidates.add(energize(input, Pair(0, j), BeamDirection.DOWN))
+            candidates.add(energize(input, Pair(m-1, j), BeamDirection.UP))
+        }
+
+        return candidates.max()
     }
 
     val input = readInput("Day16").toMutableCharMatrix()
@@ -139,8 +152,8 @@ fun main() {
     check(part1(testInput) == 46)
     part1(input).println()
 
-//    check(part2(testInput) == 145)
-//    part2(input).println()
+    check(part2(testInput) == 51)
+    part2(input).println()
 }
 
 enum class MirrorTile {
