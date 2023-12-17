@@ -34,3 +34,7 @@ fun List<String>.toMutableCharMatrix(): MutableList<MutableList<Char>> {
     return this.map { it.toMutableList() }.toMutableList()
 }
 
+fun List<List<Char>>.stringify(): String {
+    return this.map { line -> line.joinToString("") }.joinToString("\n")
+}
+
