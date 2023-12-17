@@ -25,9 +25,9 @@ fun main() {
         }
     }
 
-    fun part1(input: List<List<Int>>): Int {
-        val m = input.size
-        val n = input[0].size
+    fun traverse(grid: List<List<Int>>, minChain: Int, maxChain: Int): Int {
+        val m = grid.size
+        val n = grid[0].size
 
         val q = PriorityQueue {t1: HeapNode, t2: HeapNode -> t1.cost - t2.cost}
         val seen = mutableSetOf<Pair<Pair<Int, Int>, BeamDirection>>()
@@ -51,15 +51,18 @@ fun main() {
             for (dir in validDirections(cur.direction)) {
                 var coords = cur.coords
                 var cost = cur.cost
-                for (k in 0..<3) {
+                for (k in 1..maxChain) {
                     coords = nextTile(coords, dir)
                     if (!isPointInBounds(coords, m, n)) {
                         continue
                     }
 
                     val (i, j) = coords
-                    cost += input[i][j]
-                    q.add(HeapNode(cost, coords, dir))
+                    cost += grid[i][j]
+
+                    if (k >= minChain) {
+                        q.add(HeapNode(cost, coords, dir))
+                    }
                 }
             }
         }
@@ -67,17 +70,21 @@ fun main() {
         return -1
     }
 
+    fun part1(input: List<List<Int>>): Int {
+        return traverse(input, 0, 3)
+    }
+
     fun part2(input: List<List<Int>>): Int {
-        return 0
+        return traverse(input, 4, 10)
     }
 
     val input = readInput("Day17").toMutableIntMatrix()
     val testInput = readInput("Day17_test").toMutableIntMatrix()
 
-//    println(part1(testInput))
+    println(part1(testInput))
     check(part1(testInput) == 102)
     part1(input).println()
 
-//    check(part2(testInput) == 51)
-//    part2(input).println()
+    check(part2(testInput) == 94)
+    part2(input).println()
 }
