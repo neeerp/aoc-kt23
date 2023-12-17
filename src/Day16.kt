@@ -64,19 +64,6 @@ fun main() {
         }
     }
 
-    fun isValid(coords: Pair<Int, Int>, m: Int, n: Int): Boolean {
-        val (i, j) = coords
-        if (i < 0 || i >= m) {
-            return false
-        }
-
-        if (j < 0 || j >= n) {
-            return false
-        }
-
-        return true
-    }
-
     fun isEnergized(coords: Pair<Int, Int>, energized: Set<Pair<Pair<Int, Int>, BeamDirection>>): Boolean {
         return Pair(coords, BeamDirection.UP) in energized ||
             Pair(coords, BeamDirection.DOWN) in energized ||
@@ -103,7 +90,7 @@ fun main() {
             for (dir in dirs) {
                 val newCoords = nextTile(coords, dir)
 
-                if (!isValid(newCoords, m, n) || Pair(newCoords, dir) in energized) {
+                if (!isPointInBounds(newCoords, m, n) || Pair(newCoords, dir) in energized) {
                     continue
                 }
 

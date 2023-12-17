@@ -34,7 +34,23 @@ fun List<String>.toMutableCharMatrix(): MutableList<MutableList<Char>> {
     return this.map { it.toMutableList() }.toMutableList()
 }
 
+fun List<String>.toMutableIntMatrix(): MutableList<MutableList<Int>> {
+    return this.map { line -> line.map { it.toString().toInt() }.toMutableList() }.toMutableList()
+}
+
 fun List<List<Char>>.stringify(): String {
     return this.map { line -> line.joinToString("") }.joinToString("\n")
 }
 
+fun isPointInBounds(coords: Pair<Int, Int>, m: Int, n: Int): Boolean {
+    val (i, j) = coords
+    if (i < 0 || i >= m) {
+        return false
+    }
+
+    if (j < 0 || j >= n) {
+        return false
+    }
+
+    return true
+}
