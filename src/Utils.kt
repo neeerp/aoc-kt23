@@ -30,3 +30,7 @@ fun <T>List<List<T>>.transpose(): List<List<T>> {
     return (this[0].indices).map { i -> (this.indices).map { j -> this[j][i]} }
 }
 
+fun List<String>.toMutableCharMatrix(): MutableList<MutableList<Char>> {
+    return this.map { it.toMutableList() }.toMutableList()
+}
+
