@@ -190,23 +190,38 @@ data class Part(val x: Long, val m: Long, val a: Long, val s: Long) {
 }
 
 data class PartSet(
-    val x: AttributeRange
-    val m: AttributeRange
-    val a: AttributeRange
+    val x: AttributeRange,
+    val m: AttributeRange,
+    val a: AttributeRange,
     val s: AttributeRange
 ) {
 
     // Left inclusive
     fun split(attr: Char, firstEndsAt: Int): Pair<PartSet?, PartSet?> {
-        return Pair(null, null)
+        val r1 = this[attr].copy(end = firstEndsAt)
+        val r2 = this[attr].copy(start = firstEndsAt + 1)
+
+        val left = if (r1.start >= r1.end) this.copyWith(attr, r1) else null
+        val right = if (r2.start >= r2.end) this.copyWith(attr, r2) else null
+        return Pair(left, right)
     }
 
-    private fun copyWith(attr: Char, start: Int, end: Int): Pair<PartSet, PartSet> {
-        when (attr) {
-            'x' -> this.copy(x = AttributeRange(start, end))
-            'm' -> this.copy(m = AttributeRange(start, end))
-            'a' -> this.copy(a = AttributeRange(start, end))
-            's' -> this.copy(s = AttributeRange(start, end))
+    operator fun get(attr: Char): AttributeRange {
+        return when (attr) {
+            'x' -> x
+            'm' -> m
+            'a' -> a
+            's' -> s
+            else -> throw InvalidParameterException()
+        }
+    }
+
+    private fun copyWith(attr: Char, a: AttributeRange): PartSet {
+        return when (attr) {
+            'x' -> this.copy(x = a)
+            'm' -> this.copy(m = a)
+            'a' -> this.copy(a = a)
+            's' -> this.copy(s = a)
             else -> throw UnsupportedOperationException()
         }
     }
