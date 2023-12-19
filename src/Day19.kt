@@ -48,6 +48,26 @@ class Sorter(workflowInputs: List<String>) {
     private fun isTerminal(label: String): Boolean {
         return label == "A" || label == "R"
     }
+
+    fun process(seed: PartSet): List<PartSet> {
+        val stack = mutableListOf(Pair("in", seed))
+        val result = mutableListOf<PartSet>()
+        while (stack.isNotEmpty()) {
+            val (label, ps) = stack.removeLast()
+            val workflow = workflows[label]!!
+            val disjointPartSets = workflow.transition(ps)
+
+            for ((label, ps) in disjointPartSets) {
+                if (label == "A") {
+                    result.add(ps)
+                } else if (label != "R") {
+                    stack.add(Pair(label,ps))
+                }
+            }
+        }
+
+        return result
+    }
 }
 
 class Workflow(s: String) {
@@ -75,15 +95,41 @@ class Workflow(s: String) {
 
         throw InvalidParameterException()
     }
+
+    fun transition(ps: PartSet): List<Pair<String, PartSet>> {
+        val result = mutableListOf<Pair<String, PartSet>>()
+
+        var cur = listOf(ps)
+        for (step in steps) {
+            val transitioning = mutableListOf<PartSet>()
+            val notTransitioning = mutableListOf<PartSet>()
+            for ((left, right) in cur.map { step.transition(it) }) {
+                transitioning.addAll(left)
+                notTransitioning.addAll(right)
+            }
+
+            cur = notTransitioning
+            result.addAll(transitioning.map { Pair(step.label, it)  })
+        }
+
+        return result
+    }
 }
 
 interface WorkflowStep {
+    val label: String
     fun transition(p: Part): String?
+
+    fun transition(ps: PartSet): Pair<List<PartSet>, List<PartSet>>
 }
 
-class UnconditionalStep(private val label: String) : WorkflowStep {
+class UnconditionalStep(override val label: String) : WorkflowStep {
     override fun transition(p: Part): String {
         return label
+    }
+
+    override fun transition(ps: PartSet): Pair<List<PartSet>, List<PartSet>> {
+        return Pair(listOf(ps), listOf())
     }
 }
 
@@ -91,7 +137,7 @@ class ConditionalStep(s: String) : WorkflowStep {
     private val attr: Char
     private val op: (Long) -> Boolean
     private val threshold: Long
-    private val label: String
+    override val label: String
 
     init {
         attr = s[0]
@@ -106,6 +152,10 @@ class ConditionalStep(s: String) : WorkflowStep {
 
     override fun transition(p: Part): String? {
         return if (evaluate(p)) label else null
+    }
+
+    override fun transition(ps: PartSet): Pair<List<PartSet>, List<PartSet>> {
+        TODO("Not yet implemented")
     }
 
     private fun evaluate(p: Part): Boolean {
@@ -138,3 +188,28 @@ data class Part(val x: Long, val m: Long, val a: Long, val s: Long) {
         }
     }
 }
+
+data class PartSet(
+    val x: AttributeRange
+    val m: AttributeRange
+    val a: AttributeRange
+    val s: AttributeRange
+) {
+
+    // Left inclusive
+    fun split(attr: Char, firstEndsAt: Int): Pair<PartSet?, PartSet?> {
+        return Pair(null, null)
+    }
+
+    private fun copyWith(attr: Char, start: Int, end: Int): Pair<PartSet, PartSet> {
+        when (attr) {
+            'x' -> this.copy(x = AttributeRange(start, end))
+            'm' -> this.copy(m = AttributeRange(start, end))
+            'a' -> this.copy(a = AttributeRange(start, end))
+            's' -> this.copy(s = AttributeRange(start, end))
+            else -> throw UnsupportedOperationException()
+        }
+    }
+}
+
+data class AttributeRange(val start: Int, val end: Int)
