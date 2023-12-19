@@ -2,7 +2,7 @@ import java.security.InvalidParameterException
 
 fun main() {
 
-    fun part1(input: String): Long {
+    fun part1(input: String): Int {
         val (workflowInput, partInput) = input.split("\n\n")
 
         val parts = partInput.split('\n').map { Part.of(it) }
@@ -13,17 +13,26 @@ fun main() {
 
 
     fun part2(input: String): Long {
-        return 0L
+        val sorter = Sorter(input.substringBefore("\n\n").split("\n"))
+        val seed = PartSet(
+            AttributeRange(1, 4000),
+            AttributeRange(1, 4000),
+            AttributeRange(1, 4000),
+            AttributeRange(1, 4000)
+        )
+
+        val result = sorter.process(seed).sumOf { it.size() }
+        return result
     }
 
     val input = readRaw("Day19")
     val testInput = readRaw("Day19_test")
 
-    check(part1(testInput) == 19114L)
+    check(part1(testInput) == 19114)
     part1(input).println()
 
-//    check(part2(testInput) == 167409079868000L)
-//    part2(input).println()
+    check(part2(testInput) == 167409079868000L)
+    part2(input).println()
 }
 
 class Sorter(workflowInputs: List<String>) {
@@ -57,11 +66,11 @@ class Sorter(workflowInputs: List<String>) {
             val workflow = workflows[label]!!
             val disjointPartSets = workflow.transition(ps)
 
-            for ((label, ps) in disjointPartSets) {
-                if (label == "A") {
-                    result.add(ps)
-                } else if (label != "R") {
-                    stack.add(Pair(label,ps))
+            for ((nextLabel, nextPs) in disjointPartSets) {
+                if (nextLabel == "A") {
+                    result.add(nextPs)
+                } else if (nextLabel != "R") {
+                    stack.add(Pair(nextLabel,nextPs))
                 }
             }
         }
@@ -135,17 +144,20 @@ class UnconditionalStep(override val label: String) : WorkflowStep {
 
 class ConditionalStep(s: String) : WorkflowStep {
     private val attr: Char
-    private val op: (Long) -> Boolean
-    private val threshold: Long
+    private val op: (Int) -> Boolean
+    private val opChar: Char
+    private val threshold: Int
     override val label: String
 
     init {
         attr = s[0]
         label = s.substringAfter(':')
-        threshold = s.drop(2).substringBefore(':').toLong()
+        threshold = s.drop(2).substringBefore(':').toInt()
+
+        opChar = s[1]
         op = when (s[1]) {
-            '<' -> {a: Long -> a < threshold}
-            '>' -> {a: Long -> a > threshold}
+            '<' -> {a: Int -> a < threshold}
+            '>' -> {a: Int -> a > threshold}
             else -> throw UnsupportedOperationException()
         }
     }
@@ -155,7 +167,12 @@ class ConditionalStep(s: String) : WorkflowStep {
     }
 
     override fun transition(ps: PartSet): Pair<List<PartSet>, List<PartSet>> {
-        TODO("Not yet implemented")
+        val (left, right) = ps.split(attr, threshold - (if (opChar == '<') 1 else 0))
+
+        val willTransition = listOfNotNull(if (opChar == '<') left else right)
+        val willNotTransition = listOfNotNull(if (opChar == '<') right else left)
+
+        return Pair(willTransition, willNotTransition)
     }
 
     private fun evaluate(p: Part): Boolean {
@@ -163,8 +180,8 @@ class ConditionalStep(s: String) : WorkflowStep {
     }
 }
 
-data class Part(val x: Long, val m: Long, val a: Long, val s: Long) {
-    operator fun get(attr: Char): Long {
+data class Part(val x: Int, val m: Int, val a: Int, val s: Int) {
+    operator fun get(attr: Char): Int {
         return when (attr) {
             'x' -> x
             'm' -> m
@@ -174,14 +191,14 @@ data class Part(val x: Long, val m: Long, val a: Long, val s: Long) {
         }
     }
 
-    fun partSum(): Long {
+    fun partSum(): Int {
         return x + m + a + s
     }
 
     companion object {
-        fun of(s: String): Part {
-            val (x, m, a, s) = s.drop(1).dropLast(1).split(',').map {
-                it.substringAfter('=').toLong()
+        fun of(input: String): Part {
+            val (x, m, a, s) = input.drop(1).dropLast(1).split(',').map {
+                it.substringAfter('=').toInt()
             }
 
             return Part(x, m, a, s)
@@ -201,9 +218,13 @@ data class PartSet(
         val r1 = this[attr].copy(end = firstEndsAt)
         val r2 = this[attr].copy(start = firstEndsAt + 1)
 
-        val left = if (r1.start >= r1.end) this.copyWith(attr, r1) else null
-        val right = if (r2.start >= r2.end) this.copyWith(attr, r2) else null
+        val left = if (r1.start <= r1.end) this.copyWith(attr, r1) else null
+        val right = if (r2.start <= r2.end) this.copyWith(attr, r2) else null
         return Pair(left, right)
+    }
+
+    fun size(): Long {
+        return x.size() * m.size() * a.size() * s.size()
     }
 
     operator fun get(attr: Char): AttributeRange {
@@ -227,4 +248,8 @@ data class PartSet(
     }
 }
 
-data class AttributeRange(val start: Int, val end: Int)
+data class AttributeRange(val start: Int, val end: Int) {
+    fun size(): Long {
+        return end - start + 1L
+    }
+}
