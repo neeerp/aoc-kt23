@@ -3,7 +3,7 @@ fun main() {
     fun part1(input: List<String>): Long {
         val network = MachineNetwork(input)
         for (times in 1..1000) {
-            network.pushButton()
+            network.pushButton(true)
         }
 
         return network.signalProduct()
@@ -11,7 +11,14 @@ fun main() {
 
 
     fun part2(input: List<String>): Long {
-        return 0L
+        var count = 0L
+        val network = MachineNetwork(input)
+        while (true) {
+            val started = network.pushButton(false)
+            count += 1
+            if (started) break
+        }
+        return count
     }
 
     val input = readInput("Day20")
@@ -22,19 +29,23 @@ fun main() {
     check(part1(testInput2) == 11687500L)
     part1(input).println()
 
-//    check(part2(testInput) == 952408144115L)
-//    part2(input).println()
+    // This never terminates; just look at the console.
+    // In my input, there's four nodes that lead into a conjunction that then turns the 'rx' node on.
+    // I'm printing out the iteration at which each turns on.
+    // The answer turns out to be the product of the iteration # they turn on at.
+    part2(input).println()
 }
 
 private interface Network {
     fun send(signals: List<Signal>)
-    fun pushButton()
+    fun pushButton(test: Boolean): Boolean
 }
 
 private class MachineNetwork(input: List<String>) : Network {
     // TODO: Maybe encapsulate counting
     private var hi = 0L
     private var lo = 0L
+    private var iters = 0L
 
     private val START_SIGNAL = Signal("btn", "broadcaster", SignalStrength.LO)
 
@@ -68,20 +79,31 @@ private class MachineNetwork(input: List<String>) : Network {
         signalQueue.addAll(signals)
     }
 
-    override fun pushButton() {
+    override fun pushButton(test: Boolean): Boolean {
+        iters += 1
         signalQueue.add(START_SIGNAL)
 
         while (signalQueue.isNotEmpty()) {
             val signal = signalQueue.removeFirst()
+
+            if (signal.dst == "mg" && signal.strength == SignalStrength.HI) {
+                println("Signal to &mg: ${signal} at iter #${iters}")
+            }
+
+            if (!test && signal.dst == "rx" && signal.strength == SignalStrength.LO) {
+                return true
+            }
 
             if (signal.strength == SignalStrength.LO) {
                 lo += 1
             } else {
                 hi += 1
             }
-//            println(signal)
+
             nodes[signal.dst]?.process(signal)
         }
+
+        return false
     }
 
 }
