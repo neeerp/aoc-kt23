@@ -4,18 +4,28 @@ import kotlin.math.min
 
 fun main() {
 
-    fun part1(input: List<String>): Int {
-        val suspendedBricks = input.map{ Brick.of(it) }.sortedByDescending { - it.minZ() }
+    fun settleBricks(bricks: List<Brick>): Triple<
+            List<Brick>,
+            Map<Triple<Int, Int, Int>, Brick>,
+            Int
+    > {
+        val suspendedBricks = bricks.sortedByDescending { -it.minZ() }
         val settledBricks = mutableListOf<Brick>()
+
         val maxHeights = mutableMapOf<Pair<Int, Int>, Int>()
         val grid = mutableMapOf<Triple<Int, Int, Int>, Brick>()
-
+        var moved = 0
         for (brick in suspendedBricks) {
             // Settle the bricks
             val settleHeight = brick.occupies().maxOf {
                 val (x, y, _) = it
                 (maxHeights[Pair(x, y)] ?: 0) + 1
             }
+
+            if (settleHeight != brick.minZ()) {
+                moved += 1
+            }
+
             val settledBrick = brick.settled(settleHeight)
 
             settledBricks.add(brick.settled(settleHeight))
@@ -25,6 +35,14 @@ fun main() {
                 grid[it] = settledBrick
             }
         }
+
+        return Triple(settledBricks, grid, moved)
+    }
+
+
+    fun part1(input: List<String>): Int {
+        val suspendedBricks = input.map{ Brick.of(it) }.sortedByDescending { - it.minZ() }
+        val (settledBricks, grid, _) = settleBricks(suspendedBricks)
 
         for (brick in settledBricks) {
             // Determine what bricks are being supported.
@@ -42,8 +60,15 @@ fun main() {
 
 
 
-    fun part2(input: List<String>): Long {
-        return 0L
+    fun part2(input: List<String>): Int {
+        val suspendedBricks = input.map{ Brick.of(it) }.sortedByDescending { - it.minZ() }
+        val (settledBricks, grid, _) = settleBricks(suspendedBricks)
+
+        val result = settledBricks.indices.sumOf { index ->
+            val (_, _, c) =  settleBricks(settledBricks.filterIndexed { i, _ -> i != index  })
+            c
+        }
+        return result
     }
 
     val input = readInput("Day22")
@@ -52,8 +77,8 @@ fun main() {
     check(part1(testInput) == 5)
     part1(input).println()
 
-//    check(part2(testInput) == 167409079868000L)
-//    part2(input).println()
+    check(part2(testInput) == 7)
+    part2(input).println()
 }
 
 data class Brick(val a: Triple<Int, Int, Int>, val b: Triple<Int, Int, Int>) {
