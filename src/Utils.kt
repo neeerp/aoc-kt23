@@ -34,6 +34,10 @@ fun List<String>.toMutableCharMatrix(): MutableList<MutableList<Char>> {
     return this.map { it.toMutableList() }.toMutableList()
 }
 
+fun List<List<Char>>.toMutable(): MutableList<MutableList<Char>> {
+    return this.map { it.toMutableList() }.toMutableList()
+}
+
 fun List<String>.toMutableIntMatrix(): MutableList<MutableList<Int>> {
     return this.map { line -> line.map { it.toString().toInt() }.toMutableList() }.toMutableList()
 }
